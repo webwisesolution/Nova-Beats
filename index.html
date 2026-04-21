@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>NOVA BEAT | Interactive Drum Sequencer</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,500;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Inter', sans-serif;
+      padding: 1.5rem;
+    }
+
+    /* main sequencer card */
+    .beat-machine {
+      max-width: 1200px;
+      width: 100%;
+      background: rgba(12, 20, 30, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 3rem;
+      padding: 1.8rem 2rem 2.2rem;
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 255, 255, 0.2);
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      transition: all 0.2s;
+    }
+
+    /* header & title */
+    .title-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 1.8rem;
+      gap: 0.8rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #aaffff, #5f9eff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+    h1 i {
+      background: none;
+      color: #3ccfcf;
+      font-size: 2rem;
+      -webkit-background-clip: unset;
+      background-clip: unset;
+    }
+    .badge {
+      background: rgba(0, 255, 255, 0.15);
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #8efff5;
+      border: 1px solid rgba(0, 255, 255, 0.4);
+      backdrop-filter: blur(2px);
+    }
+
+    /* controls row */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.9rem 1.5rem;
+      border-radius: 2.5rem;
+      border: 1px solid rgba(100, 200, 255, 0.2);
+    }
+    .bpm-control {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #0e1622;
+      padding: 0.4rem 1.2rem;
+      border-radius: 3rem;
+    }
+    .bpm-control label {
+      font-weight: 600;
+      color: #bbf0ff;
+      letter-spacing: 1px;
+    }
+    #bpmSlider {
+      width: 180px;
+      cursor: pointer;
+      background: #2c3e55;
+      height: 4px;
+      border-radius: 10px;
+    }
+    #bpmValue {
+      font-family: monospace;
+      font-weight: 800;
+      background: #010a14;
+      padding: 0.2rem 0.6rem;
+      border-radius: 2rem;
+      color: #0ff;
+      min-width: 60px;
+      text-align: center;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.8rem;
+    }
+    .action-btn {
+      background: rgba(20, 30, 55, 0.8);
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      color: #eef5ff;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+    }
+    .action-btn i {
+      font-size: 1rem;
+    }
+    .action-btn.play {
+      background: #0ff22030;
+      border-color: #0ff;
+      color: #bfffff;
+      box-shadow: 0 0 6px rgba(0, 255, 255, 0.3);
+    }
+    .action-btn:hover {
+      background: #1f2b46;
+      transform: scale(0.97);
+      border-color: cyan;
+    }
+    .vol-slider {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .vol-slider i {
+      color: #0ff;
+    }
+    #volumeControl {
+      width: 100px;
+    }
+
+    /* sequencer grid */
+    .sequencer {
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 2rem;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    .grid-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      min-width: 640px;
+    }
+    .track-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .track-label {
+      width: 80px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.85rem;
+      background: linear-gradient(145deg, #1e2a3a, #0b101a);
+      padding: 0.4rem 0;
+      text-align: center;
+      border-radius: 2rem;
+      color: #aaf0ff;
+      border: 1px solid cyan;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .steps {
+      display: flex;
+      gap: 0.6rem;
+      flex: 1;
+      justify-content: space-around;
+    }
+    .step {
+      background: #141c2c;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 58px;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: all 0.08s linear;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3);
+      border: 1px solid #2a3b55;
+    }
+    .step.active-step {
+      background: #1fdfbb;
+      box-shadow: 0 0 12px #0ff88a, inset 0 0 4px white;
+      border-color: white;
+      transform: scale(0.98);
+    }
+    .step.on {
+      background: radial-gradient(circle at 30% 30%, #00e0c0, #00aa99);
+      border-color: #aaffdd;
+      box-shadow: 0 0 10px #0ff5b0;
+    }
+    .step.off {
+      background: #1a253b;
+      opacity: 0.7;
+    }
+    .step:hover {
+      transform: scale(1.03);
+      filter: brightness(1.2);
+    }
+
+    /* foot note & fun */
+    .personality {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: #89b9d0;
+    }
+    .glow-text {
+      font-size: 0.75rem;
+      background: rgba(0,0,0,0.3);
+      padding: 0.3rem 1rem;
+      border-radius: 2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.6; text-shadow: 0 0 0 cyan;}
+      100% { opacity: 1; text-shadow: 0 0 4px cyan;}
+    }
+    .playing-indicator {
+      animation: pulse 0.8s infinite;
+    }
+
+    @media (max-width: 720px) {
+      .beat-machine { padding: 1.2rem; }
+      .track-label { width: 65px; font-size: 0.7rem; }
+      .step { border-radius: 12px; }
+      .steps { gap: 0.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="beat-machine">
+  <div class="title-section">
+    <h1><i class="fas fa-drumstick-bite"></i> NOVA BEAT <span style="font-size: 1rem;">⚡ step lab</span></h1>
+    <div class="badge"><i class="fas fa-headphones-alt"></i> interactive · synth engine</div>
+  </div>
+
+  <div class="controls">
+    <div class="bpm-control">
+      <label><i class="fas fa-tachometer-alt"></i> BPM</label>
+      <input type="range" id="bpmSlider" min="70" max="160" step="1" value="110">
+      <span id="bpmValue">110</span>
+    </div>
+    <div class="vol-slider">
+      <i class="fas fa-volume-up"></i>
+      <input type="range" id="volumeControl" min="0" max="1" step="0.02" value="0.75">
+    </div>
+    <div class="action-buttons">
+      <button id="playBtn" class="action-btn play"><i class="fas fa-play"></i> Play</button>
+      <button id="stopBtn" class="action-btn"><i class="fas fa-stop"></i> Stop</button>
+      <button id="randomBtn" class="action-btn"><i class="fas fa-random"></i> Random</button>
+      <button id="resetBtn" class="action-btn"><i class="fas fa-trash-alt"></i> Reset</button>
+    </div>
+  </div>
+
+  <div class="sequencer">
+    <div class="grid-container" id="stepGrid"></div>
+  </div>
+
+  <div class="personality">
+    <div class="glow-text"><i class="fas fa-music"></i> Click pads to build rhythm · each step = 16th note</div>
+    <div class="glow-text"><i class="fas fa-synth"></i> synthesised drums · live bpm twist</div>
+    <div class="glow-text"><i class="fas fa-bolt"></i> beat maker · infinite patterns</div>
+  </div>
+</div>
+
+<script>
+  // ---------- AUDIO ENGINE ----------
+  let audioCtx = null;
+  let masterGain = null;
+  let isAudioReady = false;
+
+  // sequencer state
+  let tracks = 4;        // 0:kick,1:snare,2:hat,3:clap
+  let stepsCount = 8;
+  let pattern = [];      // [track][step] boolean
+  let isPlaying = false;
+  let currentStep = 0;
+  let playInterval = null;
+  let bpm = 110;
+
+  // DOM elements
+  const bpmSlider = document.getElementById('bpmSlider');
+  const bpmValueSpan = document.getElementById('bpmValue');
+  const playBtn = document.getElementById('playBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const randomBtn = document.getElementById('randomBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const volumeSlider = document.getElementById('volumeControl');
+  const gridContainer = document.getElementById('stepGrid');
+
+  // ----- helper: init audio context on first user interaction -----
+  async function initAudio() {
+    if (audioCtx && audioCtx.state === 'running') return audioCtx;
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = parseFloat(volumeSlider.value);
+      masterGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  // ensure audio context alive for playback (user gesture)
+  async function ensureAudioContext() {
+    const ctx = await initAudio();
+    if (ctx.state !== 'running') {
+      await ctx.resume();
+    }
+    return ctx;
+  }
+
+  // ----- SOUND SYNTHESIS (creative & fresh) -----
+  async function playKick() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(masterGain);
+    osc.frequency.value = 55;
+    osc.frequency.exponentialRampToValueAtTime(42, now + 0.12);
+    gainNode.gain.setValueAtTime(0.65, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.start();
+    osc.stop(now + 0.4);
+  }
+
+  async function playSnare() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    const now = audioCtx.currentTime;
+    // noise burst
+    const bufferSize = 4096;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const noiseGain = audioCtx.createGain();
+    noise.connect(noiseGain);
+    noiseGain.connect(masterGain);
+    noiseGain.gain.setValueAtTime(0.5, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    noise.start();
+    noise.stop(now + 0.3);
+    // tone oscillator
+    const osc = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+    osc.connect(oscGain);
+    oscGain.connect(masterGain);
+    osc.frequency.value = 185;
+    oscGain.gain.setValueAtTime(0.28, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.start();
+    osc.stop(now + 0.2);
+  }
+
+  async function playHat() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    const now = audioCtx.currentTime;
+    const bufferSize = 2048;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 6000;
+    const hatGain = audioCtx.createGain();
+    noise.connect(filter);
+    filter.connect(hatGain);
+    hatGain.connect(masterGain);
+    hatGain.gain.setValueAtTime(0.32, now);
+    hatGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    noise.start();
+    noise.stop(now + 0.2);
+  }
+
+  async function playClap() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    const now = audioCtx.currentTime;
+    // double noise burst for clap character
+    const makeNoiseBurst = (timeOffset, gainVal) => {
+      const bufferSize = 1800;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const bufData = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) bufData[i] = Math.random() * 2 - 1;
+      const source = audioCtx.createBufferSource();
+      source.buffer = noiseBuffer;
+      const g = audioCtx.createGain();
+      source.connect(g);
+      g.connect(masterGain);
+      g.gain.setValueAtTime(gainVal, now + timeOffset);
+      g.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + 0.12);
+      source.start(now + timeOffset);
+      source.stop(now + timeOffset + 0.15);
+    };
+    makeNoiseBurst(0.0, 0.4);
+    makeNoiseBurst(0.045, 0.3);
+  }
+
+  const soundMap = [playKick, playSnare, playHat, playClap];
+
+  // preview sound when clicking step
+  async function previewTrackSound(trackIndex) {
+    await ensureAudioContext();
+    if (soundMap[trackIndex]) soundMap[trackIndex]();
+  }
+
+  // ----- SEQUENCER LOGIC -----
+  function initPattern() {
+    pattern = [];
+    for (let t = 0; t < tracks; t++) {
+      pattern[t] = new Array(stepsCount).fill(false);
+    }
+    // a little starter groove to make it fun (kick on 1,3 ; snare 5,13 pattern but 8 step style)
+    pattern[0][0] = true;
+    pattern[0][2] = true;
+    pattern[0][4] = true;
+    pattern[0][6] = true;
+    pattern[1][1] = true;
+    pattern[1][5] = true;
+    pattern[2][2] = true;
+    pattern[2][6] = true;
+    pattern[3][4] = true;
+  }
+
+  function renderGrid() {
+    if (!gridContainer) return;
+    gridContainer.innerHTML = '';
+    const trackNames = ['KICK', 'SNARE', 'HAT', 'CLAP'];
+    for (let t = 0; t < tracks; t++) {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'track-row';
+      const labelSpan = document.createElement('div');
+      labelSpan.className = 'track-label';
+      labelSpan.innerHTML = `<i class="fas fa-circle"></i> ${trackNames[t]}`;
+      rowDiv.appendChild(labelSpan);
+      const stepsDiv = document.createElement('div');
+      stepsDiv.className = 'steps';
+      for (let s = 0; s < stepsCount; s++) {
+        const stepBtn = document.createElement('div');
+        stepBtn.className = `step ${pattern[t][s] ? 'on' : 'off'}`;
+        if (isPlaying && currentStep === s) stepBtn.classList.add('active-step');
+        stepBtn.dataset.track = t;
+        stepBtn.dataset.step = s;
+        stepBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const track = parseInt(stepBtn.dataset.track);
+          const step = parseInt(stepBtn.dataset.step);
+          // toggle pattern
+          pattern[track][step] = !pattern[track][step];
+          renderGrid();  // re-render fresh
+          // play preview sound for creativity & immediate feedback
+          previewTrackSound(track);
+        });
+        stepsDiv.appendChild(stepBtn);
+      }
+      rowDiv.appendChild(stepsDiv);
+      gridContainer.appendChild(rowDiv);
+    }
+  }
+
+  function updateHighlight() {
+    // re-render keeps highlight, but we can directly manipulate classes for performance.
+    // Instead of full re-render we update classes:
+    const allRows = document.querySelectorAll('.track-row');
+    for (let t = 0; t < tracks; t++) {
+      const stepsCells = allRows[t]?.querySelectorAll('.step');
+      if (!stepsCells) continue;
+      for (let s = 0; s < stepsCount; s++) {
+        const cell = stepsCells[s];
+        if (!cell) continue;
+        // update on/off state based on pattern
+        if (pattern[t][s]) {
+          cell.classList.add('on');
+          cell.classList.remove('off');
+        } else {
+          cell.classList.add('off');
+          cell.classList.remove('on');
+        }
+        // highlight current step
+        if (isPlaying && currentStep === s) {
+          cell.classList.add('active-step');
+        } else {
+          cell.classList.remove('active-step');
+        }
+      }
+    }
+  }
+
+  // step playback trigger
+  function playStep(stepIndex) {
+    for (let t = 0; t < tracks; t++) {
+      if (pattern[t][stepIndex]) {
+        // play sound (audio context already running)
+        if (audioCtx && audioCtx.state === 'running') {
+          soundMap[t]();
+        } else {
+          // if not running we silently ignore, but play button ensures resume
+        }
+      }
+    }
+  }
+
+  function sequencerLoop() {
+    if (!isPlaying) return;
+    playStep(currentStep);
+    // update UI highlight
+    updateHighlight();
+    // advance step
+    currentStep = (currentStep + 1) % stepsCount;
+  }
+
+  function startInterval() {
+    if (playInterval) clearInterval(playInterval);
+    const stepDurationMs = (60000 / bpm) / 4;  // 16th note = quarter/4
+    playInterval = setInterval(() => {
+      if (isPlaying) sequencerLoop();
+    }, stepDurationMs);
+  }
+
+  function stopPlayback() {
+    if (playInterval) {
+      clearInterval(playInterval);
+      playInterval = null;
+    }
+    isPlaying = false;
+    currentStep = 0;
+    updateHighlight();
+    playBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+    playBtn.classList.remove('playing-indicator');
+  }
+
+  async function startPlayback() {
+    if (isPlaying) return;
+    await ensureAudioContext();
+    isPlaying = true;
+    currentStep = 0;   // restart from downbeat
+    if (playInterval) clearInterval(playInterval);
+    startInterval();
+    playBtn.innerHTML = '<i class="fas fa-pause"></i> PLAYING';
+    playBtn.classList.add('playing-indicator');
+    updateHighlight();
+  }
+
+  // handle BPM change while playing
+  function setBpm(newBpm) {
+    bpm = newBpm;
+    bpmValueSpan.innerText = bpm;
+    bpmSlider.value = bpm;
+    if (isPlaying) {
+      // restart interval with new tempo, keep current step continuity
+      if (playInterval) clearInterval(playInterval);
+      startInterval();
+    }
+  }
+
+  // random pattern generator
+  function randomPattern() {
+    for (let t = 0; t < tracks; t++) {
+      for (let s = 0; s < stepsCount; s++) {
+        pattern[t][s] = Math.random() < 0.35;
+      }
+    }
+    // ensure at least some variation
+    renderGrid();
+    updateHighlight();
+  }
+
+  function resetPattern() {
+    for (let t = 0; t < tracks; t++) {
+      for (let s = 0; s < stepsCount; s++) {
+        pattern[t][s] = false;
+      }
+    }
+    renderGrid();
+    updateHighlight();
+  }
+
+  // update volume from slider
+  function updateVolume() {
+    if (masterGain) {
+      masterGain.gain.value = parseFloat(volumeSlider.value);
+    }
+  }
+
+  // event binding
+  function bindEvents() {
+    bpmSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      setBpm(val);
+    });
+    volumeSlider.addEventListener('input', updateVolume);
+    playBtn.addEventListener('click', async () => {
+      if (isPlaying) {
+        stopPlayback();
+      } else {
+        await startPlayback();
+      }
+    });
+    stopBtn.addEventListener('click', () => {
+      if (isPlaying) stopPlayback();
+    });
+    randomBtn.addEventListener('click', () => {
+      const wasPlaying = isPlaying;
+      if (wasPlaying) stopPlayback();
+      randomPattern();
+      if (wasPlaying) startPlayback();
+    });
+    resetBtn.addEventListener('click', () => {
+      const wasPlaying = isPlaying;
+      if (wasPlaying) stopPlayback();
+      resetPattern();
+      if (wasPlaying) startPlayback();
+    });
+  }
+
+  // initial startup + UI
+  async function bootstrap() {
+    initPattern();
+    bindEvents();
+    renderGrid();
+    // set initial bpm display
+    bpm = 110;
+    bpmSlider.value = 110;
+    bpmValueSpan.innerText = 110;
+    volumeSlider.value = 0.75;
+    // audio ctx lazy init on first sound (preview on click already does)
+    // add a silent unlocker? on document click we can ensure but preview works
+    document.body.addEventListener('click', async () => {
+      if (!audioCtx || audioCtx.state !== 'running') {
+        await initAudio();
+      }
+    }, { once: true });
+    // add floating personality
+    console.log('🎧 Nova Beat ready — interactive drum machine');
+  }
+
+  bootstrap();
+</script>
+</body>
+</html>
